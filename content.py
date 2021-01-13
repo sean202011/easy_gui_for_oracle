@@ -16,7 +16,9 @@ class Content(tk.Tk):
         self.set_window()
         self.set_widgets_on_frm_main()
         # get a db session
-        self.conn.acquire()
+        self.conn_session = self.conn.acquire()
+        # define close window
+        self.protocol("WM_DELETE_WINDOW",self.close_control)
 
     def set_window(self):
         self.title("simple GUI of oracle basic operations ")
@@ -47,6 +49,10 @@ class Content(tk.Tk):
         with open(self.file_path, 'r') as f:
             temp = json.load(f)
         return tuple(temp.get("import_table_list"))
+
+    def close_control(self):
+        self.conn.close()
+        self.destroy()
 
     def call_import(self):
         try:
@@ -88,9 +94,9 @@ class Content(tk.Tk):
                         );
                         end;
                 """
-                cursor = self.conn.cursor()
+                cursor = self.conn_session.cursor()
                 cursor.executemany(v_sql, v_value)
-                self.conn.commit()
+                self.conn_session.commit()
                 msg.showinfo(title='import over', message='import successful', parent=self)
                 self.bt_import.state(["!disabled"])
         except err.No_Column_Err:
